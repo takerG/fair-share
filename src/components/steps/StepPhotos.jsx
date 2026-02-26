@@ -20,20 +20,36 @@ function StepPhotos({ onNext }) {
 
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                上传你那惨痛消费的遗照。目前这图就是个摆设，只配用来刺痛你的双眼，未来某天也许人工智能会屈尊降贵来帮你自动识别。
-            </p>
+            <div style={{
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1))',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: '1rem 1.25rem',
+                marginBottom: '1.5rem',
+                display: 'flex', alignItems: 'flex-start', gap: '0.75rem'
+            }}>
+                <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>🚧</span>
+                <div>
+                    <p style={{ color: 'var(--color-accent)', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.25rem' }}>
+                        此功能纯属摆设，建议直接跳过
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', margin: 0 }}>
+                        上传你那惨痛消费的遗照吧。目前这图就是个摆设，未来某天也许 AI 会屈尊降贵来帮你自动识别。
+                    </p>
+                </div>
+            </div>
 
             <div style={{
-                border: '2px dashed var(--color-primary)',
+                border: '2px dashed var(--border-glass)',
                 borderRadius: 'var(--radius-md)',
                 padding: '2rem',
                 textAlign: 'center',
-                background: 'rgba(99, 102, 241, 0.05)',
+                background: 'rgba(99, 102, 241, 0.03)',
                 cursor: 'pointer',
                 marginBottom: '2rem',
                 position: 'relative',
-                transition: 'all var(--transition-bounce)'
+                transition: 'all var(--transition-bounce)',
+                opacity: 0.65
             }}>
                 {photoPreview ? (
                     <div>
@@ -46,9 +62,9 @@ function StepPhotos({ onNext }) {
                     </div>
                 ) : (
                     <div>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📷</div>
-                        <h3 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem' }}>点击给账单收尸（上传图片）</h3>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>支持 JPG, PNG 格式</p>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.4 }}>📷</div>
+                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '1rem' }}>点击给账单收尸（上传图片）</h3>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>支持 JPG, PNG 格式</p>
                     </div>
                 )}
                 <input
@@ -62,10 +78,14 @@ function StepPhotos({ onNext }) {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" onClick={onNext} style={{ flex: 1 }}>太惨了，跳过</button>
-                <button className="btn-primary" onClick={onNext} style={{ flex: 2 }} disabled={!photoPreview}>
-                    含泪继续录入
+                <button className="btn-primary" onClick={onNext} style={{ flex: 2 }}>
+                    👉 别废话，直接开始录入
                 </button>
+                {photoPreview && (
+                    <button className="btn-secondary" onClick={onNext} style={{ flex: 1 }}>
+                        带图继续
+                    </button>
+                )}
             </div>
         </div>
     );

@@ -63,7 +63,7 @@ function App() {
       {/* 顶部进度指示器 */}
       <header className="glass-container fade-in-up" style={{ padding: '1rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>精准 AA<span style={{ color: 'var(--color-primary)' }}>.</span></h2>
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>极扣-精准 AA<span style={{ color: 'var(--color-primary)' }}>.</span></h2>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Step {currentStepIndex + 1} of {STEPS.length}
           </span>

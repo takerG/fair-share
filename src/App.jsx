@@ -122,7 +122,23 @@ function App() {
       {/* 顶部进度指示器 */}
       <header className="glass-container fade-in-up" style={{ padding: '1rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>极抠<span style={{ color: 'var(--color-primary)' }}>.</span></h2>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+            <span style={{
+              fontSize: '1.5rem',
+              fontWeight: '800',
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.02em'
+            }}>极抠</span>
+            <span style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              fontWeight: '500',
+              letterSpacing: '0.02em'
+            }}>精准AA</span>
+          </div>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Step {stepInfo.current} of {stepInfo.total}
           </span>

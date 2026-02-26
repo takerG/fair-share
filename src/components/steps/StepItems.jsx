@@ -58,7 +58,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
             {/* 模块：参与者录入 */}
             <section style={{ marginBottom: '2rem' }}>
                 <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    👥 分赃团伙 ({participants.length}人)
+                    👥 参与人员 ({participants.length}人)
                 </h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                     {participants.map(p => (
@@ -79,7 +79,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                     <input
                         type="text"
                         className="input-field"
-                        placeholder="输入嫌疑人名 (例: 大冤种Bob)"
+                        placeholder="输入姓名"
                         value={newParticipantName}
                         onChange={(e) => setNewParticipantName(e.target.value)}
                         style={{ marginBottom: 0 }}
@@ -93,7 +93,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
             {/* 模块：消费项录入 */}
             <section style={{ marginBottom: '2.5rem' }}>
                 <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    🍔 罪证清单
+                    🍔 消费项目
                 </h3>
 
                 {items.length > 0 && (
@@ -159,7 +159,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                     <input
                         type="text"
                         className="input-field"
-                        placeholder="被吃了啥"
+                        placeholder="菜品名称"
                         value={newItemName}
                         onChange={(e) => setNewItemName(e.target.value)}
                         style={{ marginBottom: 0, flex: 2 }}
@@ -168,7 +168,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                         type="number"
                         step="0.01"
                         className="input-field"
-                        placeholder="放血价 ¥"
+                        placeholder="价格 ¥"
                         value={newItemPrice}
                         onChange={(e) => setNewItemPrice(e.target.value)}
                         style={{ marginBottom: 0, flex: 1 }}
@@ -179,9 +179,9 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
 
             {/* 底部导航 */}
             <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>退堂</button>
+                <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>上一步</button>
                 <button className="btn-primary" onClick={onNext} disabled={isNextDisabled} style={{ flex: 2, opacity: isNextDisabled ? 0.5 : 1 }}>
-                    召唤嫌疑人来分赃
+                    下一步
                 </button>
             </div>
         </div>

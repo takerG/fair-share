@@ -8,10 +8,10 @@ import StepAllocate from './components/steps/StepAllocate';
 import StepResult from './components/steps/StepResult';
 
 const STEPS = [
-  { id: 'photos', title: '账单遗照', subtitle: '把那些抢了你钱的单据挂这里（迟早有一天AI会帮你收拾它们）' },
-  { id: 'items', title: '谁吃了啥', subtitle: '在这个物欲横流的社会，总有人趁你不注意多啃两口' },
-  { id: 'allocate', title: '撕破脸环节', subtitle: '是兄弟就明算账，说，你到底炫了多少？' },
-  { id: 'result', title: '清算时刻', subtitle: '善恶终有报，天道好轮回。不信抬头看，账单饶过谁' }
+  { id: 'photos', title: '上传账单', subtitle: '上传账单照片（AI识别功能开发中）' },
+  { id: 'items', title: '添加信息', subtitle: '添加参与人员和消费项目' },
+  { id: 'allocate', title: '分配比例', subtitle: '设置每道菜每个人的食用比例' },
+  { id: 'result', title: '结算结果', subtitle: '查看每个人的应付金额明细' }
 ];
 
 function App() {
@@ -63,7 +63,7 @@ function App() {
       {/* 顶部进度指示器 */}
       <header className="glass-container fade-in-up" style={{ padding: '1rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>极抠-精准 AA<span style={{ color: 'var(--color-primary)' }}>.</span></h2>
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>极抠<span style={{ color: 'var(--color-primary)' }}>.</span></h2>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Step {currentStepIndex + 1} of {STEPS.length}
           </span>

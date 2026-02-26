@@ -80,7 +80,7 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
                     </div>
                     {isOverAllocated && (
                         <div style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginTop: '0.5rem', fontWeight: 600 }}>
-                            总比例不能超过 100%，请调整！
+                            总比例不能超过 100%
                         </div>
                     )}
                 </div>
@@ -110,10 +110,10 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
 
                             {/* 快捷按钮 */}
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 0)}>没吃</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 25)}>尝点</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 50)}>一半</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 100)}>全包</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 0)}>0%</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 25)}>25%</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 50)}>50%</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 100)}>100%</button>
                             </div>
                         </div>
                     );
@@ -134,7 +134,7 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
                     disabled={isOverAllocated}
                     style={{ flex: 2, opacity: isOverAllocated ? 0.5 : 1 }}
                 >
-                    {activeItemIndex === items.length - 1 ? '完成分配，去结算' : '下一个餐品'}
+                    {activeItemIndex === items.length - 1 ? '查看结果' : '下一项'}
                 </button>
             </div>
 

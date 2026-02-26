@@ -31,10 +31,10 @@ function StepPhotos({ onNext }) {
                 <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>🚧</span>
                 <div>
                     <p style={{ color: 'var(--color-accent)', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.25rem' }}>
-                        此功能纯属摆设，建议直接跳过
+                        功能开发中
                     </p>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', margin: 0 }}>
-                        上传你那惨痛消费的遗照吧。目前这图就是个摆设，未来某天也许 AI 会屈尊降贵来帮你自动识别。
+                        可先跳过此步骤，直接录入信息。后续将支持AI识别账单。
                     </p>
                 </div>
             </div>
@@ -63,7 +63,7 @@ function StepPhotos({ onNext }) {
                 ) : (
                     <div>
                         <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.4 }}>📷</div>
-                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '1rem' }}>点击给账单收尸（上传图片）</h3>
+                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '1rem' }}>点击上传账单图片</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>支持 JPG, PNG 格式</p>
                     </div>
                 )}
@@ -79,11 +79,11 @@ function StepPhotos({ onNext }) {
 
             <div style={{ display: 'flex', gap: '1rem' }}>
                 <button className="btn-primary" onClick={onNext} style={{ flex: 2 }}>
-                    👉 别废话，直接开始录入
+                    👉 跳过，直接录入
                 </button>
                 {photoPreview && (
                     <button className="btn-secondary" onClick={onNext} style={{ flex: 1 }}>
-                        带图继续
+                        继续下一步
                     </button>
                 )}
             </div>

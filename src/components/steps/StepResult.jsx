@@ -27,7 +27,7 @@ function StepResult({ participants, items, allocations, onPrev }) {
             });
             const dataUrl = canvas.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = `极扣_账单_${new Date().toISOString().slice(0, 10)}.png`;
+            link.download = `极抠_账单_${new Date().toISOString().slice(0, 10)}.png`;
             link.href = dataUrl;
             link.click();
         } catch (error) {

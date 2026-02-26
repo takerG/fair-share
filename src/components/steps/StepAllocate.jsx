@@ -12,13 +12,14 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
     // 提取当前项的分摊数据，未设置则默认为 0
     const itemAllocation = allocations[currentItem.id] || {};
 
-    // 计算当前项已分配的总比例
-    let totalAllocated = 0;
+    // 计算当前项已认领的总比例（只计算 claimed）
+    let totalClaimed = 0;
     participants.forEach(p => {
-        totalAllocated += (itemAllocation[p.id] || 0);
+        const pConfig = itemAllocation[p.id] || {};
+        totalClaimed += pConfig.claimed || 0;
     });
-    const unallocated = Math.max(0, 100 - totalAllocated);
-    const isOverAllocated = totalAllocated > 100;
+    const unclaimed = Math.max(0, 100 - totalClaimed);
+    const isOverAllocated = totalClaimed > 100;
 
     const handlePercentageChange = (participantId, value) => {
         const val = parseInt(value, 10) || 0;
@@ -26,7 +27,10 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
             ...prev,
             [currentItem.id]: {
                 ...(prev[currentItem.id] || {}),
-                [participantId]: val
+                [participantId]: {
+                    ...(prev[currentItem.id]?.[participantId] || {}),
+                    claimed: val
+                }
             }
         }));
     };
@@ -41,6 +45,12 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
         } else {
             onNext(); // 都分完了就去下一步
         }
+    };
+
+    // 获取某个人的认领百分比
+    const getClaimedPercent = (participantId) => {
+        const pConfig = itemAllocation[participantId] || {};
+        return pConfig.claimed || 0;
     };
 
     return (
@@ -61,18 +71,18 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
                 {/* 认领状态条 */}
                 <div style={{ marginTop: '1rem' }}>
                     <div style={{ fontSize: '0.875rem', color: isOverAllocated ? 'var(--color-danger)' : 'var(--text-main)', display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span>已认领: {totalAllocated}%</span>
-                        <span>待平摊: {isOverAllocated ? '错误' : `${unallocated}%`}</span>
+                        <span>已认领: {totalClaimed}%</span>
+                        <span>待处理: {isOverAllocated ? '错误' : `${unclaimed}%`}</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--border-glass)', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
                         <div style={{
-                            width: `${Math.min(100, totalAllocated)}%`,
+                            width: `${Math.min(100, totalClaimed)}%`,
                             background: isOverAllocated ? 'var(--color-danger)' : 'var(--color-success)',
                             transition: 'all 0.3s ease'
                         }}></div>
                         {!isOverAllocated && (
                             <div style={{
-                                width: `${unallocated}%`,
+                                width: `${unclaimed}%`,
                                 background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.05), rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)',
                                 transition: 'all 0.3s ease'
                             }}></div>
@@ -89,7 +99,7 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
             {/* 滑块分配区 */}
             <div style={{ marginBottom: '2rem' }}>
                 {participants.map(p => {
-                    const pValue = itemAllocation[p.id] || 0;
+                    const pValue = getClaimedPercent(p.id);
                     return (
                         <div key={p.id} style={{
                             marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.6)',
@@ -125,7 +135,7 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
                 {activeItemIndex === 0 ? (
                     <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>上一步</button>
                 ) : (
-                    <button className="btn-secondary" onClick={() => setActiveItemIndex(activeItemIndex - 1)} style={{ flex: 1 }}>上一餐品</button>
+                    <button className="btn-secondary" onClick={() => setActiveItemIndex(activeItemIndex - 1)} style={{ flex: 1 }}>上一项</button>
                 )}
 
                 <button
@@ -134,7 +144,7 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
                     disabled={isOverAllocated}
                     style={{ flex: 2, opacity: isOverAllocated ? 0.5 : 1 }}
                 >
-                    {activeItemIndex === items.length - 1 ? '查看结果' : '下一项'}
+                    {activeItemIndex === items.length - 1 ? '下一步' : '下一项'}
                 </button>
             </div>
 

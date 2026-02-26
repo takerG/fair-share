@@ -83,7 +83,7 @@ function StepResult({ participants, items, allocations, onPrev }) {
                                                 <span>{detail.itemName}</span>
                                                 <span>¥ {detail.cost.toFixed(2)}</span>
                                             </div>
-                                            {/* 拆分：自觉认领 + 自动平摊 */}
+                                            {/* 拆分：认领 + 指定 + 平摊 */}
                                             <div style={{ paddingLeft: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
                                                 {detail.claimedPercent > 0 && (
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -91,13 +91,19 @@ function StepResult({ participants, items, allocations, onPrev }) {
                                                         <span>¥ {detail.claimedCost.toFixed(2)}</span>
                                                     </div>
                                                 )}
-                                                {detail.autoPercent > 0 && (
+                                                {detail.assignedPercent > 0 && (
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <span>🤷 平摊 {Math.round(detail.autoPercent)}%</span>
-                                                        <span>¥ {detail.autoCost.toFixed(2)}</span>
+                                                        <span>👆 指定 {Math.round(detail.assignedPercent)}%</span>
+                                                        <span>¥ {detail.assignedCost.toFixed(2)}</span>
                                                     </div>
                                                 )}
-                                                {detail.claimedPercent === 0 && detail.autoPercent === 0 && (
+                                                {detail.splitPercent > 0 && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span>🤷 平摊 {Math.round(detail.splitPercent)}%</span>
+                                                        <span>¥ {detail.splitCost.toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                                {detail.claimedPercent === 0 && detail.assignedPercent === 0 && detail.splitPercent === 0 && (
                                                     <div>✅ 无</div>
                                                 )}
                                             </div>

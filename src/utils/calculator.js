@@ -1,20 +1,20 @@
 /**
  * AA 账单计算核心逻辑
- * 将餐费分为"已认领百分比"和"未认领百分比"，未认领部分平摊给所有人
+ * 将餐费分为"认领"、"指定"、"平摊"三种类型
  */
 
 /**
  * 计算每个人的最终应付金额
- * @param {Array} participants - 所有参与者列表，例如 [{id: 1, name: 'Alice'}, {id: 2, name: 'Bob'}]
+ * @param {Array} participants - 所有参与者列表，例如 [{id: 'p1', name: 'Alice'}, {id: 'p2', name: 'Bob'}]
  * @param {Array} items - 所有餐品列表，例如 [{id: 'i1', name: 'Pizza', price: 40}]
  * @param {Object} allocations - 分配映射表。
  * {
  *   'i1': { // 披萨
- *      1: 20, // Alice 认领 20%
- *      2: 20  // Bob 认领 20%
+ *      'p1': { claimed: 20, assigned: 10 }, // Alice 认领 20%，指定 10%
+ *      'p2': { claimed: 30 } // Bob 认领 30%
  *   }
  * }
- * @returns {Array} 每个人应付细节及总额 [{ participantId: 1, name: 'Alice', total: 10, details: [...] }]
+ * @returns {Array} 每个人应付细节及总额 [{ id: 'p1', name: 'Alice', total: 10, details: [...] }]
  */
 export function calculateBalances(participants, items, allocations) {
     if (!participants || participants.length === 0) return [];
@@ -30,38 +30,50 @@ export function calculateBalances(participants, items, allocations) {
     items.forEach(item => {
         const itemConfig = allocations[item.id] || {};
         let totalClaimedPercent = 0;
+        let totalAssignedPercent = 0;
 
-        // 计算此餐品已被认领的百分比总数
+        // 计算此餐品已认领和已指定的百分比总数
         participants.forEach(p => {
-            totalClaimedPercent += itemConfig[p.id] || 0;
+            const pConfig = itemConfig[p.id] || {};
+            totalClaimedPercent += pConfig.claimed || 0;
+            totalAssignedPercent += pConfig.assigned || 0;
         });
 
-        // 计算未认领部分
-        let unclaimedPercent = 100 - totalClaimedPercent;
-        if (unclaimedPercent < 0) unclaimedPercent = 0; // 兜底：理论上 UI 层会拦截超过 100% 的情况
+        const totalAllocated = totalClaimedPercent + totalAssignedPercent;
 
-        const unclaimedSharePerPerson = unclaimedPercent / numPeople; // 未认领部分平摊
+        // 计算未分配部分（需要平摊）
+        let unclaimedPercent = 100 - totalAllocated;
+        if (unclaimedPercent < 0) unclaimedPercent = 0;
+
+        const splitPercentPerPerson = unclaimedPercent / numPeople; // 平摊给每个人
 
         // 转化为金额分配给每个人
         participants.forEach(p => {
-            const pClaimedPercent = itemConfig[p.id] || 0;
-            const finalPercent = pClaimedPercent + unclaimedSharePerPerson;
-            const claimedCost = (pClaimedPercent / 100) * item.price;
-            const autoCost = (unclaimedSharePerPerson / 100) * item.price;
-            const costForThisItem = claimedCost + autoCost;
+            const pConfig = itemConfig[p.id] || {};
+            const claimedPercent = pConfig.claimed || 0;
+            const assignedPercent = pConfig.assigned || 0;
+            const splitPercent = splitPercentPerPerson;
+
+            const finalPercent = claimedPercent + assignedPercent + splitPercent;
+            const claimedCost = (claimedPercent / 100) * item.price;
+            const assignedCost = (assignedPercent / 100) * item.price;
+            const splitCost = (splitPercent / 100) * item.price;
+            const costForThisItem = claimedCost + assignedCost + splitCost;
 
             results[p.id].total += costForThisItem;
 
-            // 记录明细（含认领/自动平摊拆分）
+            // 记录明细（含认领/指定/平摊拆分）
             results[p.id].details.push({
                 itemId: item.id,
                 itemName: item.name,
                 itemPrice: item.price,
-                claimedPercent: pClaimedPercent,
-                autoPercent: unclaimedSharePerPerson,
-                finalPercent: finalPercent,
-                claimedCost: claimedCost,
-                autoCost: autoCost,
+                claimedPercent,
+                assignedPercent,
+                splitPercent,
+                finalPercent,
+                claimedCost,
+                assignedCost,
+                splitCost,
                 cost: costForThisItem
             });
         });
@@ -70,7 +82,7 @@ export function calculateBalances(participants, items, allocations) {
     // 格式化输出为数组并处理浮点数精度保留2位
     return Object.values(results).map(r => ({
         ...r,
-        total: Math.round(r.total * 100) / 100, // 规避浮点数问题
+        total: Math.round(r.total * 100) / 100,
         details: r.details.map(d => ({
             ...d,
             cost: Math.round(d.cost * 100) / 100

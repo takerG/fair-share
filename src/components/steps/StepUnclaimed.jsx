@@ -1,24 +1,31 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 /**
  * 步骤：处理未分配部分
  * 显示所有未分配满100%的物品，让用户选择平摊或指定归属
+ * 注意：只处理 claimed 之外的部分，assigned 由本步骤设置
  */
 function StepUnclaimed({ participants, items, allocations, setAllocations, onNext, onPrev }) {
-    // 计算每个物品的未分配情况
+    // 计算每个物品的未分配情况（只看 claimed，不看 assigned）
     const unclaimedItems = useMemo(() => {
         return items.map(item => {
             const itemAlloc = allocations[item.id] || {};
-            let totalAllocated = 0;
+            let totalClaimed = 0;
+            let totalAssigned = 0;
+
             participants.forEach(p => {
-                totalAllocated += (itemAlloc[p.id] || 0);
+                const pConfig = itemAlloc[p.id] || {};
+                totalClaimed += pConfig.claimed || 0;
+                totalAssigned += pConfig.assigned || 0;
             });
-            const unclaimedPercent = Math.max(0, 100 - totalAllocated);
+
+            const unclaimedPercent = Math.max(0, 100 - totalClaimed - totalAssigned);
             const unclaimedAmount = (unclaimedPercent / 100) * item.price;
 
             return {
                 ...item,
-                totalAllocated,
+                totalClaimed,
+                totalAssigned,
                 unclaimedPercent,
                 unclaimedAmount
             };
@@ -26,8 +33,46 @@ function StepUnclaimed({ participants, items, allocations, setAllocations, onNex
     }, [items, allocations, participants]);
 
     // 每个未分配物品的处理方式: 'split' | 'assign' | null
-    const [handleModes, setHandleModes] = useState({}); // { itemId: 'split' | 'assign' }
-    const [assignTargets, setAssignTargets] = useState({}); // { itemId: participantId }
+    // 初始化时，如果已有 assigned 数据，恢复之前的选择
+    const [handleModes, setHandleModes] = useState(() => {
+        const modes = {};
+        items.forEach(item => {
+            const itemAlloc = allocations[item.id] || {};
+            // 检查是否有 assigned 数据
+            let hasAssigned = false;
+            let assignedTo = null;
+
+            participants.forEach(p => {
+                const pConfig = itemAlloc[p.id] || {};
+                if (pConfig.assigned > 0) {
+                    hasAssigned = true;
+                    assignedTo = p.id;
+                }
+            });
+
+            if (hasAssigned && assignedTo) {
+                modes[item.id] = 'assign';
+            } else if (Object.keys(itemAlloc).length > 0) {
+                // 如果有认领数据但没有指定，默认为平摊
+                modes[item.id] = 'split';
+            }
+        });
+        return modes;
+    });
+
+    const [assignTargets, setAssignTargets] = useState(() => {
+        const targets = {};
+        items.forEach(item => {
+            const itemAlloc = allocations[item.id] || {};
+            participants.forEach(p => {
+                const pConfig = itemAlloc[p.id] || {};
+                if (pConfig.assigned > 0) {
+                    targets[item.id] = p.id;
+                }
+            });
+        });
+        return targets;
+    });
 
     const hasUnclaimed = unclaimedItems.length > 0;
 
@@ -61,7 +106,7 @@ function StepUnclaimed({ participants, items, allocations, setAllocations, onNex
     const handleConfirm = () => {
         if (!allHandled) return;
 
-        // 更新 allocations
+        // 更新 allocations，只修改 assigned 字段
         const newAllocations = { ...allocations };
 
         unclaimedItems.forEach(item => {
@@ -70,19 +115,26 @@ function StepUnclaimed({ participants, items, allocations, setAllocations, onNex
                 newAllocations[item.id] = {};
             }
 
-            if (mode === 'split') {
-                // 平摊给所有人
-                const splitPercent = item.unclaimedPercent / participants.length;
-                participants.forEach(p => {
-                    const current = newAllocations[item.id][p.id] || 0;
-                    newAllocations[item.id][p.id] = current + splitPercent;
-                });
-            } else if (mode === 'assign') {
+            // 先清除所有之前的 assigned
+            participants.forEach(p => {
+                if (!newAllocations[item.id][p.id]) {
+                    newAllocations[item.id][p.id] = {};
+                }
+                // 保留 claimed，清除 assigned
+                const claimed = newAllocations[item.id][p.id].claimed || 0;
+                newAllocations[item.id][p.id] = { claimed };
+            });
+
+            if (mode === 'assign') {
                 // 指定给某人
                 const targetId = assignTargets[item.id];
-                const current = newAllocations[item.id][targetId] || 0;
-                newAllocations[item.id][targetId] = current + item.unclaimedPercent;
+                if (targetId && newAllocations[item.id][targetId]) {
+                    newAllocations[item.id][targetId].assigned = item.unclaimedPercent;
+                } else if (targetId) {
+                    newAllocations[item.id][targetId] = { claimed: 0, assigned: item.unclaimedPercent };
+                }
             }
+            // split 模式：不需要设置 assigned，由 calculator 自动平摊
         });
 
         setAllocations(newAllocations);
@@ -149,6 +201,13 @@ function StepUnclaimed({ participants, items, allocations, setAllocations, onNex
                             </span>
                         </div>
 
+                        {/* 已认领信息 */}
+                        {item.totalClaimed > 0 && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                                已认领: {item.totalClaimed}%
+                            </div>
+                        )}
+
                         {/* 处理选项 */}
                         <div style={{ marginBottom: '0.75rem' }}>
                             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
@@ -156,27 +215,33 @@ function StepUnclaimed({ participants, items, allocations, setAllocations, onNex
                             </p>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button
-                                    className={`btn-secondary btn-sm ${handleModes[item.id] === 'split' ? '' : ''}`}
                                     onClick={() => setHandleMode(item.id, 'split')}
                                     style={{
                                         flex: 1,
                                         padding: '0.5rem 1rem',
                                         background: handleModes[item.id] === 'split' ? 'var(--color-primary)' : 'rgba(255,255,255,0.8)',
                                         color: handleModes[item.id] === 'split' ? 'white' : 'var(--color-primary)',
-                                        border: '2px solid var(--color-primary)'
+                                        border: '2px solid var(--color-primary)',
+                                        borderRadius: 'var(--radius-full)',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        transition: 'all 0.2s'
                                     }}
                                 >
                                     🤷 平摊给所有人
                                 </button>
                                 <button
-                                    className="btn-secondary btn-sm"
                                     onClick={() => setHandleMode(item.id, 'assign')}
                                     style={{
                                         flex: 1,
                                         padding: '0.5rem 1rem',
                                         background: handleModes[item.id] === 'assign' ? 'var(--color-primary)' : 'rgba(255,255,255,0.8)',
                                         color: handleModes[item.id] === 'assign' ? 'white' : 'var(--color-primary)',
-                                        border: '2px solid var(--color-primary)'
+                                        border: '2px solid var(--color-primary)',
+                                        borderRadius: 'var(--radius-full)',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        transition: 'all 0.2s'
                                     }}
                                 >
                                     👤 指定给某人

@@ -27,38 +27,49 @@ function App() {
   const [items, setItems] = useState([]); // {id, name, price}
   const [allocations, setAllocations] = useState({}); // { itemId: { pId: percent } }
 
-  // 计算是否有未分配物品
+  // 计算是否有未分配物品（只看 claimed，不看 assigned）
   const hasUnclaimedItems = useMemo(() => {
     if (items.length === 0) return false;
     return items.some(item => {
       const itemAlloc = allocations[item.id] || {};
-      let totalAllocated = 0;
+      let totalClaimed = 0;
+      let totalAssigned = 0;
       participants.forEach(p => {
-        totalAllocated += (itemAlloc[p.id] || 0);
+        const pConfig = itemAlloc[p.id] || {};
+        totalClaimed += pConfig.claimed || 0;
+        totalAssigned += pConfig.assigned || 0;
       });
-      return totalAllocated < 100;
+      return (totalClaimed + totalAssigned) < 100;
     });
   }, [items, allocations, participants]);
 
+  // 记录是否有未分配物品（用于导航判断）
+  // 在用户完成 allocate 步骤时判断，之后保持不变直到重新进入 allocate
+  const [hadUnclaimedWhenAllocated, setHadUnclaimedWhenAllocated] = useState(false);
+
   const handleNext = () => {
     if (currentStepIndex < STEPS.length - 1) {
-      // 如果在 allocate 步骤，且没有未分配物品，跳过 unclaimed 步骤
-      if (STEPS[currentStepIndex].id === 'allocate' && !hasUnclaimedItems) {
-        setCurrentStepIndex(currentStepIndex + 2); // 跳到 result
-      } else {
-        setCurrentStepIndex(currentStepIndex + 1);
+      // 如果在 allocate 步骤，记录是否有未分配物品
+      if (STEPS[currentStepIndex].id === 'allocate') {
+        setHadUnclaimedWhenAllocated(hasUnclaimedItems);
+        // 如果没有未分配物品，跳过 unclaimed 步骤
+        if (!hasUnclaimedItems) {
+          setCurrentStepIndex(currentStepIndex + 2); // 跳到 result
+          return;
+        }
       }
+      setCurrentStepIndex(currentStepIndex + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentStepIndex > 0) {
-      // 如果在 result 步骤，且没有未分配物品，跳回 allocate
-      if (STEPS[currentStepIndex].id === 'result' && !hasUnclaimedItems) {
+      // 如果在 result 步骤，根据之前记录的状态决定跳回哪一步
+      if (STEPS[currentStepIndex].id === 'result' && !hadUnclaimedWhenAllocated) {
         setCurrentStepIndex(currentStepIndex - 2); // 回到 allocate
-      } else {
-        setCurrentStepIndex(currentStepIndex - 1);
+        return;
       }
+      setCurrentStepIndex(currentStepIndex - 1);
     }
   };
 
@@ -84,12 +95,21 @@ function App() {
 
   // 计算实际显示的步骤数（可能跳过 unclaimed）
   const getDisplayStepInfo = () => {
-    // 如果没有未分配物品，显示时跳过 unclaimed 步骤
-    if (!hasUnclaimedItems) {
-      const visibleSteps = STEPS.filter(s => s.id !== 'unclaimed');
-      const currentStep = STEPS[currentStepIndex];
-      const currentIndex = visibleSteps.findIndex(s => s.id === currentStep.id);
-      return { total: visibleSteps.length, current: currentIndex + 1 };
+    // 如果在 allocate 步骤，实时判断
+    const currentStep = STEPS[currentStepIndex];
+    if (currentStep.id === 'allocate') {
+      if (!hasUnclaimedItems) {
+        const visibleSteps = STEPS.filter(s => s.id !== 'unclaimed');
+        const currentIndex = visibleSteps.findIndex(s => s.id === currentStep.id);
+        return { total: visibleSteps.length, current: currentIndex + 1 };
+      }
+    } else {
+      // 其他步骤，根据之前记录的状态判断
+      if (!hadUnclaimedWhenAllocated) {
+        const visibleSteps = STEPS.filter(s => s.id !== 'unclaimed');
+        const currentIndex = visibleSteps.findIndex(s => s.id === currentStep.id);
+        return { total: visibleSteps.length, current: currentIndex + 1 };
+      }
     }
     return { total: STEPS.length, current: currentStepIndex + 1 };
   };

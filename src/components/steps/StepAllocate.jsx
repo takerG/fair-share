@@ -110,10 +110,10 @@ function StepAllocate({ participants, items, allocations, setAllocations, onNext
 
                             {/* 快捷按钮 */}
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 0)}>0%</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 25)}>25%</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 50)}>50%</button>
-                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 100)}>100%</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 0)}>没吃</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 25)}>尝点</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 50)}>一半</button>
+                                <button className="btn-secondary btn-sm" style={{ flex: 1, padding: '0.25rem 0' }} onClick={() => handleQuickSet(p.id, 100)}>全包</button>
                             </div>
                         </div>
                     );

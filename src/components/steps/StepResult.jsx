@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { calculateBalances } from '../../utils/calculator';
+import RoundTable from '../ui/RoundTable';
 
 /**
  * 步骤4：清算时刻 - 最终账单结算与构成明细展示
@@ -14,6 +15,9 @@ function StepResult({ participants, items, allocations, onPrev }) {
 
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
+
+            {/* 圆桌算账饼图联动 */}
+            <RoundTable participants={participants} items={items} results={results} />
 
             <div style={{
                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',

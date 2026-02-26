@@ -8,8 +8,9 @@ const PERSON_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#
 
 /**
  * 圆桌可视化：参与者围坐在桌边，食物散布在桌面上
+ * 支持传入 results 作为结算数据将其转换为根据金额配比的饼状图
  */
-function RoundTable({ participants, items }) {
+function RoundTable({ participants, items, results }) {
     const tableSize = 220;
     const tableRadius = tableSize / 2;
     const personDistance = tableRadius + 36; // 人物离圆心的距离
@@ -31,6 +32,29 @@ function RoundTable({ participants, items }) {
         });
     }, [items]);
 
+    // 联动结算页：如果传入了 results，计算总金额并生成饼图背景
+    const totalBill = useMemo(() => {
+        if (!results) return 0;
+        return results.reduce((sum, r) => sum + r.total, 0);
+    }, [results]);
+
+    const pieBackground = useMemo(() => {
+        if (!results || totalBill === 0) return null;
+        let currentAngle = 0;
+        const slices = results.map((person) => {
+            const pIdx = participants.findIndex(p => p.id === person.id);
+            const color = PERSON_COLORS[(pIdx !== -1 ? pIdx : 0) % PERSON_COLORS.length];
+            const percentage = (person.total / totalBill) * 100;
+            if (percentage === 0) return null;
+
+            const slice = `${color} ${currentAngle}% ${currentAngle + percentage}%`;
+            currentAngle += percentage;
+            return slice;
+        }).filter(Boolean);
+
+        return slices.length > 0 ? `conic-gradient(${slices.join(', ')})` : null;
+    }, [results, participants, totalBill]);
+
     return (
         <div style={{
             display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -47,15 +71,17 @@ function RoundTable({ participants, items }) {
                     transform: 'translate(-50%, -50%)',
                     width: tableSize, height: tableSize,
                     borderRadius: '50%',
-                    background: 'radial-gradient(ellipse at 40% 40%, #d4a574, #b8895a, #9c7042)',
+                    background: pieBackground || 'radial-gradient(ellipse at 40% 40%, #d4a574, #b8895a, #9c7042)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.15), inset 0 -4px 8px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.2)',
                     border: '4px solid #8b6234',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    transition: 'background 0.5s ease'
                 }}>
-                    {/* 桌面木纹装饰 */}
+                    {/* 桌面木纹装饰：当作为饼图时，降低一点可见度让色彩更清晰 */}
                     <div style={{
                         position: 'absolute', inset: 0, borderRadius: '50%',
                         background: 'repeating-radial-gradient(circle at 50% 50%, transparent, transparent 20px, rgba(0,0,0,0.03) 20px, rgba(0,0,0,0.03) 22px)',
+                        opacity: pieBackground ? 0.3 : 1
                     }} />
 
                     {/* 食物分布 */}

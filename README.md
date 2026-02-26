@@ -1,16 +1,88 @@
-# React + Vite
+# 🍕 锱铢必较 AA 系统 (FairShare)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **吃得多的多付，吃得少的少出。天网恢恢，账单不漏。**
 
-Currently, two official plugins are available:
+还在忍受 4 个人点了 40 块的披萨，有人独吞 5 块却只掏 10 块钱的窒息操作吗？  
+**锱铢必较** 就是为了终结这种"伪公平"而生的精准 AA 工具。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ 核心卖点
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| 功能 | 说明 |
+|------|------|
+| 📷 **账单收尸** | 上传用餐小票照片，为日后 AI 自动识别预留接口 |
+| 🍔 **罪证登记** | 录入每道菜的名称和价格，支持随时点击修改 |
+| 🎚️ **撕破脸分配** | 每人用滑块选择各道菜的食用百分比，超过 100% 自动拦截 |
+| 🤷 **连坐平摊** | 没人认领的部分？强制均摊给所有人，谁也别想跑 |
+| 📊 **清算判决** | 一目了然的账单明细：自觉认领多少、被连坐多少，分毫不差 |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 快速开始
+
+```bash
+# 克隆仓库
+git clone https://github.com/takerG/fair-share.git
+cd fair-share
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+打开浏览器访问 `http://localhost:5173`，开始你的精准 AA 之旅。
+
+---
+
+## 📱 使用流程
+
+```
+ ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+ │  1. 账单遗照  │ ──▶ │  2. 谁吃了啥  │ ──▶ │ 3. 撕破脸环节 │ ──▶ │ 4. 清算时刻  │
+ │  上传小票照片  │     │ 登记人员+菜品 │     │ 滑块选百分比  │     │ 查看最终判决  │
+ └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### 举个栗子 🌰
+
+> 4 个人吃了一份 **40 元的披萨**（8 块）。  
+> 张三一个人炫了 5 块（62.5%），其余三人各吃 1 块（12.5%）。
+>
+> **传统 AA**：每人 10 元。张三：😏  
+> **锱铢必较**：张三 25 元 + 均摊，其他人各 5 元 + 均摊。张三：😱
+
+---
+
+## 🛠️ 技术栈
+
+- **React 19** + **Vite 7** — 极速单页应用
+- **Vanilla CSS** — 手工打造的毛玻璃（Glassmorphism）主题，零依赖
+- **纯前端** — 所有数据留在你的浏览器里，不上传任何隐私信息
+
+---
+
+## 🗺️ Roadmap
+
+- [x] 向导式多步交互流程
+- [x] 百分比滑块 + 快捷按钮分配
+- [x] 未认领部分自动平摊
+- [x] 账单构成拆分（认领 vs 连坐）
+- [ ] 📸 AI 识别账单自动提取菜品
+- [ ] ☁️ 云端同步 & 分享账单链接
+- [ ] 🌐 PWA 离线支持
+- [ ] 🧾 历史账单管理
+
+---
+
+## 📄 License
+
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  <sub>用爱与怨气驱动开发 ❤️‍🔥</sub>
+</p>

@@ -41,10 +41,11 @@ function StepResult({ participants, items, allocations, onPrev }) {
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
 
-            {/* 用来被截图的区域 */}
+            {/* 圆桌算账饼图联动 (排除在截图区域外) */}
+            <RoundTable participants={participants} items={items} results={results} />
+
+            {/* 用来被截图的区域：剔除了复杂的圆桌组件 */}
             <div ref={resultRef} style={{ padding: '0.5rem', margin: '-0.5rem', borderRadius: 'var(--radius-lg)' }}>
-                {/* 圆桌算账饼图联动 */}
-                <RoundTable participants={participants} items={items} results={results} />
 
                 <div style={{
                     background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',

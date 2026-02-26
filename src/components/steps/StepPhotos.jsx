@@ -33,15 +33,18 @@ function StepPhotos({ onNext, setItems }) {
             setScanStage('加载语言包...');
 
             try {
-                const result = await scanReceipt(dataUrl, ({ stage, progress }) => {
-                    setScanProgress(progress);
-                    if (stage === 'initializing') {
-                        setScanStage('初始化...');
-                    } else if (stage === 'recognizing') {
-                        setScanStage('识别中...');
-                    } else {
-                        setScanStage('解析中...');
-                    }
+                const result = await scanReceipt(dataUrl, (info) => {
+                    setScanProgress(info.progress || 0);
+                    const stageLabels = {
+                        'preprocessing': '预处理图片...',
+                        'loading': '加载引擎...',
+                        'initializing': '初始化...',
+                        'loading-lang': '下载语言包...',
+                        'initializing-api': '准备识别...',
+                        'recognizing': '识别中...',
+                        'parsing': '解析结果...'
+                    };
+                    setScanStage(stageLabels[info.stage] || info.stage);
                 });
 
                 if (result.items.length > 0) {

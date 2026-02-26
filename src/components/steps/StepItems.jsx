@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import RoundTable from '../ui/RoundTable';
 
 function StepItems({ participants, setParticipants, items, setItems, onNext, onPrev }) {
     const [newItemName, setNewItemName] = useState('');
@@ -50,6 +51,9 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
 
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
+
+            {/* 圆桌可视化 */}
+            <RoundTable participants={participants} items={items} />
 
             {/* 模块：参与者录入 */}
             <section style={{ marginBottom: '2rem' }}>

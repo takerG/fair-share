@@ -133,48 +133,58 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
                     zIndex: 1000,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1.5rem'
+                    justifyContent: 'center'
                 }}
                     onClick={closePreview}
                 >
                     <div style={{
+                        position: 'relative',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        maxWidth: '100%',
-                        maxHeight: '100%'
+                        padding: '1rem',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        maxHeight: 'calc(100vh - 2rem)'
                     }}>
                         <img
                             src={imageDataUrl}
                             alt="账单"
+                            onClick={(e) => e.stopPropagation()}
                             style={{
                                 maxWidth: '100%',
-                                maxHeight: '70vh',
+                                maxHeight: 'calc(100vh - 180px)',
                                 borderRadius: 'var(--radius-lg)',
                                 boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
                             }}
                         />
-                        <div style={{
+                        <p style={{
                             color: 'white',
-                            textAlign: 'center',
-                            marginTop: '1.25rem'
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            margin: '1rem 0 0.25rem',
+                            textAlign: 'center'
                         }}>
-                            <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', marginBottom: '0.25rem' }}>长按图片保存到相册</p>
-                            <p style={{ margin: 0, opacity: 0.6, fontSize: '0.85rem' }}>点击任意位置关闭</p>
-                        </div>
+                            长按图片保存到相册
+                        </p>
+                        <p style={{
+                            color: 'rgba(255,255,255,0.6)',
+                            fontSize: '0.85rem',
+                            margin: 0
+                        }}>
+                            点击任意位置关闭
+                        </p>
                         {navigator.share && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleShare(); }}
                                 style={{
-                                    marginTop: '1rem',
-                                    padding: '0.75rem 2rem',
+                                    marginTop: '0.75rem',
+                                    padding: '0.6rem 1.5rem',
                                     background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: 'var(--radius-full)',
                                     fontWeight: 600,
-                                    fontSize: '0.9rem'
+                                    fontSize: '0.85rem'
                                 }}
                             >
                                 分享

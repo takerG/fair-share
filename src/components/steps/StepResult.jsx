@@ -127,40 +127,41 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
                 <div style={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.9)',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
                     zIndex: 1000,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '1rem'
+                    padding: '1.5rem'
                 }}
                     onClick={closePreview}
                 >
                     <div style={{
                         color: 'white',
                         textAlign: 'center',
-                        marginBottom: '1rem',
-                        fontSize: '0.9rem'
+                        marginBottom: '1.25rem'
                     }}>
-                        <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>长按图片保存到相册</p>
-                        <p style={{ margin: 0, opacity: 0.7, fontSize: '0.8rem' }}>点击任意位置关闭</p>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', marginBottom: '0.35rem' }}>长按图片保存到相册</p>
+                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.85rem' }}>点击任意位置关闭</p>
                     </div>
                     <img
                         src={imageDataUrl}
                         alt="账单"
                         style={{
                             maxWidth: '100%',
-                            maxHeight: '70vh',
-                            borderRadius: 'var(--radius-md)',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                            maxHeight: '65vh',
+                            borderRadius: 'var(--radius-lg)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
                         }}
                     />
                     {navigator.share && (
                         <button
                             onClick={(e) => { e.stopPropagation(); handleShare(); }}
                             style={{
-                                marginTop: '1rem',
+                                marginTop: '1.25rem',
                                 padding: '0.75rem 2rem',
                                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
                                 color: 'white',

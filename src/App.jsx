@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './index.css';
 
 // 版本号 - 每次修改自增
-const VERSION = 'v1.0.9';
+const VERSION = 'v1.0.10';
 
 // 导入步骤组件
 import StepPhotos from './components/steps/StepPhotos';

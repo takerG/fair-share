@@ -9,7 +9,7 @@ import StepUnclaimed from './components/steps/StepUnclaimed';
 import StepResult from './components/steps/StepResult';
 
 const STEPS = [
-  { id: 'photos', title: '上传账单', subtitle: '上传账单照片（AI识别功能开发中）' },
+  { id: 'photos', title: '上传账单', subtitle: '上传账单照片，自动识别菜品和价格' },
   { id: 'items', title: '添加信息', subtitle: '添加参与人员和消费项目' },
   { id: 'allocate', title: '分配比例', subtitle: '设置每道菜每个人的食用比例' },
   { id: 'unclaimed', title: '处理未分配', subtitle: '处理未分配满100%的物品' },

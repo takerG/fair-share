@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './index.css';
 
+// 版本号 - 每次修改自增
+const VERSION = 'v1.0.9';
+
 // 导入步骤组件
 import StepPhotos from './components/steps/StepPhotos';
 import StepItems from './components/steps/StepItems';
@@ -276,9 +279,15 @@ function App() {
           padding: '1rem 0',
           color: 'var(--text-muted)',
           fontSize: '0.75rem',
-          opacity: 0.6
+          opacity: 0.6,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '0.75rem'
         }}>
-          数据仅保存在本地浏览器
+          <span>数据仅保存在本地浏览器</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span>{VERSION}</span>
         </footer>
       </main>
     </div>

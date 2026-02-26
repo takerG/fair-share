@@ -9,6 +9,8 @@ import html2canvas from 'html2canvas';
 function StepResult({ participants, items, allocations, onPrev, onReset }) {
     const resultRef = useRef(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [showImagePreview, setShowImagePreview] = useState(false);
+    const [imageDataUrl, setImageDataUrl] = useState(null);
 
     const results = useMemo(() => {
         return calculateBalances(participants, items, allocations);
@@ -24,25 +26,83 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
         return { maxPayer, minPayer, avgAmount };
     }, [results, totalBill, participants.length]);
 
+    // 检测是否为 iOS
+    const isIOS = useMemo(() => {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }, []);
+
+    // 生成图片
+    const generateImage = async () => {
+        if (!resultRef.current) return null;
+
+        const canvas = await html2canvas(resultRef.current, {
+            scale: window.devicePixelRatio || 2,
+            useCORS: true,
+            backgroundColor: '#f8fafc'
+        });
+
+        return canvas.toDataURL('image/png');
+    };
+
+    // 保存图片（兼容 iOS）
     const handleDownload = async () => {
-        if (!resultRef.current || isDownloading) return;
+        if (isDownloading) return;
         setIsDownloading(true);
+
         try {
-            const canvas = await html2canvas(resultRef.current, {
-                scale: window.devicePixelRatio || 2,
-                useCORS: true,
-                backgroundColor: '#f8fafc'
-            });
-            const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = `极抠_账单_${new Date().toISOString().slice(0, 10)}.png`;
-            link.href = dataUrl;
-            link.click();
+            const dataUrl = await generateImage();
+            if (!dataUrl) {
+                alert('生成图片失败，请重试');
+                return;
+            }
+
+            // iOS 特殊处理：显示预览让用户长按保存
+            if (isIOS) {
+                setImageDataUrl(dataUrl);
+                setShowImagePreview(true);
+            } else {
+                // 其他设备：直接下载
+                const link = document.createElement('a');
+                link.download = `极抠_账单_${new Date().toISOString().slice(0, 10)}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         } catch (error) {
             console.error('生成图片失败', error);
             alert('生成图片失败，请重试');
         } finally {
             setIsDownloading(false);
+        }
+    };
+
+    // 关闭预览
+    const closePreview = () => {
+        setShowImagePreview(false);
+        setImageDataUrl(null);
+    };
+
+    // 使用 Web Share API 分享（如果支持）
+    const handleShare = async () => {
+        if (!imageDataUrl) return;
+
+        try {
+            // 将 base64 转换为 Blob
+            const response = await fetch(imageDataUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `极抠_账单_${new Date().toISOString().slice(0, 10)}.png`, { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: '极抠账单',
+                    text: '看看这顿饭怎么分的'
+                });
+            }
+        } catch (error) {
+            console.log('分享失败或取消', error);
         }
     };
 
@@ -61,6 +121,60 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
 
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
+
+            {/* 图片预览弹窗 (iOS) */}
+            {showImagePreview && imageDataUrl && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.9)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1rem'
+                }}
+                    onClick={closePreview}
+                >
+                    <div style={{
+                        color: 'white',
+                        textAlign: 'center',
+                        marginBottom: '1rem',
+                        fontSize: '0.9rem'
+                    }}>
+                        <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>长按图片保存到相册</p>
+                        <p style={{ margin: 0, opacity: 0.7, fontSize: '0.8rem' }}>点击任意位置关闭</p>
+                    </div>
+                    <img
+                        src={imageDataUrl}
+                        alt="账单"
+                        style={{
+                            maxWidth: '100%',
+                            maxHeight: '70vh',
+                            borderRadius: 'var(--radius-md)',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                        }}
+                    />
+                    {navigator.share && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                            style={{
+                                marginTop: '1rem',
+                                padding: '0.75rem 2rem',
+                                background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 'var(--radius-full)',
+                                fontWeight: 600,
+                                fontSize: '0.9rem'
+                            }}
+                        >
+                            分享
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* 圆桌算账饼图联动 */}
             <RoundTable participants={participants} items={items} results={results} />
@@ -199,18 +313,20 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
 
             </div>
 
-            {/* 底部操作 */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>返回修改</button>
-                <button className="btn-secondary" onClick={onReset} style={{ flex: 1 }}>重新开始</button>
+            {/* 底部操作 - 垂直排列适配手机 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
                 <button
                     className="btn-primary"
                     onClick={handleDownload}
                     disabled={isDownloading}
-                    style={{ flex: 1.5, opacity: isDownloading ? 0.5 : 1 }}
+                    style={{ opacity: isDownloading ? 0.5 : 1 }}
                 >
-                    {isDownloading ? '生成中...' : '保存图片'}
+                    {isDownloading ? '生成中...' : (isIOS ? '保存到相册' : '保存图片')}
                 </button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>返回修改</button>
+                    <button className="btn-secondary" onClick={onReset} style={{ flex: 1 }}>重新开始</button>
+                </div>
             </div>
         </div>
     );

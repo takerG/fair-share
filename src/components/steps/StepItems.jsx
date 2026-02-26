@@ -32,22 +32,51 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
         }
     };
 
+    const handleClearAllItems = () => {
+        if (items.length === 0) return;
+        if (confirm('确定要清空所有消费项目吗？')) {
+            setItems([]);
+            setEditingItemId(null);
+        }
+    };
+
     const handleAddParticipant = (e) => {
         e.preventDefault();
-        if (newParticipantName) {
+        if (newParticipantName.trim()) {
             setParticipants([...participants, {
                 id: 'p_' + Date.now(),
-                name: newParticipantName
+                name: newParticipantName.trim()
             }]);
             setNewParticipantName('');
         }
     };
 
     const handleRemoveParticipant = (id) => {
+        if (participants.length <= 1) {
+            alert('至少需要保留一位参与者');
+            return;
+        }
         setParticipants(participants.filter(p => p.id !== id));
     };
 
+    const handleAddQuickParticipant = (name) => {
+        if (name && !participants.some(p => p.name === name)) {
+            setParticipants([...participants, {
+                id: 'p_' + Date.now(),
+                name: name
+            }]);
+        }
+    };
+
+    // 计算总金额
+    const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
+
     const isNextDisabled = items.length === 0 || participants.length === 0;
+
+    // 快速添加参与者建议
+    const quickAddSuggestions = ['我', '朋友A', '朋友B', '同事A', '同事B'].filter(
+        name => !participants.some(p => p.name === name)
+    ).slice(0, 3);
 
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -57,9 +86,20 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
 
             {/* 模块：参与者录入 */}
             <section style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    👥 参与人员 ({participants.length}人)
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        👥 参与人员
+                        <span style={{
+                            background: 'var(--color-primary)',
+                            color: 'white',
+                            fontSize: '0.75rem',
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: 'var(--radius-full)'
+                        }}>{participants.length}人</span>
+                    </h3>
+                </div>
+
+                {/* 参与者标签 */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                     {participants.map(p => (
                         <div key={p.id} style={{
@@ -75,6 +115,33 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                         </div>
                     ))}
                 </div>
+
+                {/* 快速添加建议 */}
+                {quickAddSuggestions.length > 0 && participants.length < 5 && (
+                    <div style={{ marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>快速添加:</span>
+                        {quickAddSuggestions.map(name => (
+                            <button
+                                key={name}
+                                onClick={() => handleAddQuickParticipant(name)}
+                                style={{
+                                    background: 'var(--border-glass)',
+                                    border: 'none',
+                                    padding: '0.25rem 0.6rem',
+                                    borderRadius: 'var(--radius-full)',
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer',
+                                    marginRight: '0.25rem',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                + {name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* 添加参与者表单 */}
                 <form onSubmit={handleAddParticipant} style={{ display: 'flex', gap: '0.5rem' }}>
                     <input
                         type="text"
@@ -84,7 +151,7 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                         onChange={(e) => setNewParticipantName(e.target.value)}
                         style={{ marginBottom: 0 }}
                     />
-                    <button type="submit" className="btn-secondary" style={{ width: 'auto' }}>添加</button>
+                    <button type="submit" className="btn-secondary" style={{ width: 'auto', padding: '0 1rem' }}>添加</button>
                 </form>
             </section>
 
@@ -92,18 +159,63 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
 
             {/* 模块：消费项录入 */}
             <section style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    🍔 消费项目
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        🍔 消费项目
+                        {items.length > 0 && (
+                            <span style={{
+                                background: 'var(--color-secondary)',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: 'var(--radius-full)'
+                            }}>{items.length}项</span>
+                        )}
+                    </h3>
+                    {items.length > 0 && (
+                        <button
+                            onClick={handleClearAllItems}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                padding: '0.25rem 0.5rem'
+                            }}
+                        >
+                            清空
+                        </button>
+                    )}
+                </div>
 
+                {/* 总金额显示 */}
                 {items.length > 0 && (
+                    <div style={{
+                        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1))',
+                        padding: '0.75rem 1rem',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>消费总额</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--color-primary)' }}>
+                            ¥ {totalAmount.toFixed(2)}
+                        </span>
+                    </div>
+                )}
+
+                {/* 物品列表 */}
+                {items.length > 0 ? (
                     <div style={{ marginBottom: '1rem', background: 'rgba(255,255,255, 0.5)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)' }}>
                         {items.map((item, index) => (
                             <div key={item.id} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem',
                                 borderBottom: index < items.length - 1 ? '1px solid var(--border-glass)' : 'none'
                             }}>
-                                <span style={{ fontWeight: 500 }}>{item.name}</span>
+                                <span style={{ fontWeight: 500, flex: 1 }}>{item.name}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {editingItemId === item.id ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -153,8 +265,22 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                             </div>
                         ))}
                     </div>
+                ) : (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '2rem 1rem',
+                        color: 'var(--text-muted)',
+                        background: 'rgba(255,255,255, 0.3)',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '1rem'
+                    }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}>🍽️</div>
+                        <p style={{ margin: 0, fontSize: '0.9rem' }}>还没有添加消费项目</p>
+                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', opacity: 0.7 }}>在下方输入菜品名称和价格</p>
+                    </div>
                 )}
 
+                {/* 添加物品表单 */}
                 <form onSubmit={handleAddItem} style={{ display: 'flex', gap: '0.5rem' }}>
                     <input
                         type="text"
@@ -173,15 +299,20 @@ function StepItems({ participants, setParticipants, items, setItems, onNext, onP
                         onChange={(e) => setNewItemPrice(e.target.value)}
                         style={{ marginBottom: 0, flex: 1 }}
                     />
-                    <button type="submit" className="btn-secondary" style={{ width: 'auto' }}>+</button>
+                    <button type="submit" className="btn-secondary" style={{ width: 'auto', padding: '0 1rem' }}>+</button>
                 </form>
             </section>
 
             {/* 底部导航 */}
             <div style={{ display: 'flex', gap: '1rem' }}>
                 <button className="btn-secondary" onClick={onPrev} style={{ flex: 1 }}>上一步</button>
-                <button className="btn-primary" onClick={onNext} disabled={isNextDisabled} style={{ flex: 2, opacity: isNextDisabled ? 0.5 : 1 }}>
-                    下一步
+                <button
+                    className="btn-primary"
+                    onClick={onNext}
+                    disabled={isNextDisabled}
+                    style={{ flex: 2, opacity: isNextDisabled ? 0.5 : 1 }}
+                >
+                    {isNextDisabled ? (items.length === 0 ? '请添加消费项目' : '请添加参与者') : '下一步'}
                 </button>
             </div>
         </div>

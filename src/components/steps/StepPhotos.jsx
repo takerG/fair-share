@@ -21,27 +21,25 @@ function StepPhotos({ onNext, setItems }) {
         setRecognizedItems([]);
         setShowResults(false);
 
-        // 显示预览
         const reader = new FileReader();
         reader.onload = async (ev) => {
             const dataUrl = ev.target.result;
             setPhotoPreview(dataUrl);
 
-            // 开始OCR识别
             setIsScanning(true);
             setScanProgress(0);
-            setScanStage('加载语言包...');
+            setScanStage('准备中...');
 
             try {
                 const result = await scanReceipt(dataUrl, (info) => {
                     setScanProgress(info.progress || 0);
                     const stageLabels = {
-                        'preprocessing': '预处理图片...',
+                        'preprocessing': '处理图片...',
                         'loading': '加载引擎...',
                         'initializing': '初始化...',
-                        'loading-lang': '下载语言包...',
+                        'loading-lang': '下载语言包(首次较慢)...',
                         'initializing-api': '准备识别...',
-                        'recognizing': '识别中...',
+                        'recognizing': '识别文字...',
                         'parsing': '解析结果...'
                     };
                     setScanStage(stageLabels[info.stage] || info.stage);
@@ -68,7 +66,6 @@ function StepPhotos({ onNext, setItems }) {
     };
 
     const handleConfirm = () => {
-        // 将识别结果填入消费项目
         const newItems = recognizedItems.map((item, idx) => ({
             id: 'item_' + Date.now() + '_' + idx,
             name: item.name,
@@ -95,36 +92,33 @@ function StepPhotos({ onNext, setItems }) {
         setRecognizedItems(prev => [...prev, { name: '', price: 0 }]);
     };
 
-    const handleSkip = () => {
-        onNext();
-    };
-
     return (
         <div className="fade-in-up" style={{ animationDelay: '0.1s' }}>
+            {/* 提示信息 */}
             <div style={{
                 background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1))',
                 border: '1px solid rgba(99, 102, 241, 0.3)',
                 borderRadius: 'var(--radius-md)',
-                padding: '1rem 1.25rem',
-                marginBottom: '1.5rem'
+                padding: '0.875rem 1rem',
+                marginBottom: '1.25rem'
             }}>
-                <p style={{ color: 'var(--color-primary)', fontWeight: 600, marginBottom: '0.25rem' }}>
-                    上传账单图片，自动识别菜品和价格
+                <p style={{ color: 'var(--color-primary)', fontWeight: 600, marginBottom: '0.15rem', fontSize: '0.9rem' }}>
+                    📷 上传账单，自动识别菜品和价格
                 </p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                    识别结果可在下一步修改，首次识别需下载语言包
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
+                    识别结果可编辑，首次使用需下载语言包
                 </p>
             </div>
 
             {/* 上传区域 */}
             <div style={{
                 border: '2px dashed var(--border-glass)',
-                borderRadius: 'var(--radius-md)',
-                padding: '2rem',
+                borderRadius: 'var(--radius-lg)',
+                padding: showResults ? '1rem' : '2rem',
                 textAlign: 'center',
-                background: photoPreview ? 'rgba(99, 102, 241, 0.03)' : 'rgba(99, 102, 241, 0.03)',
+                background: photoPreview ? 'rgba(99, 102, 241, 0.02)' : 'rgba(99, 102, 241, 0.02)',
                 cursor: isScanning ? 'wait' : 'pointer',
-                marginBottom: '1.5rem',
+                marginBottom: '1.25rem',
                 position: 'relative',
                 transition: 'all var(--transition-normal)',
                 opacity: isScanning ? 0.8 : 1
@@ -134,44 +128,50 @@ function StepPhotos({ onNext, setItems }) {
                         <img
                             src={photoPreview}
                             alt="Receipt Preview"
-                            style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-md)' }}
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: showResults ? '120px' : '180px',
+                                borderRadius: 'var(--radius-sm)',
+                                boxShadow: 'var(--shadow-md)'
+                            }}
                         />
                         {isScanning ? (
-                            <div style={{ marginTop: '1rem' }}>
+                            <div style={{ marginTop: '0.75rem' }}>
                                 <div style={{
                                     width: '100%',
-                                    height: '8px',
+                                    maxWidth: '200px',
+                                    height: '6px',
                                     background: 'var(--border-glass)',
-                                    borderRadius: '4px',
+                                    borderRadius: '3px',
                                     overflow: 'hidden',
-                                    marginBottom: '0.5rem'
+                                    margin: '0 auto 0.5rem'
                                 }}>
                                     <div style={{
                                         width: `${scanProgress}%`,
                                         height: '100%',
                                         background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
-                                        transition: 'width 0.3s ease'
+                                        transition: 'width 0.2s ease'
                                     }} />
                                 </div>
-                                <p style={{ color: 'var(--color-primary)', fontWeight: '600', margin: 0 }}>
-                                    {scanStage} {scanProgress}%
+                                <p style={{ color: 'var(--color-primary)', fontWeight: '500', margin: 0, fontSize: '0.85rem' }}>
+                                    {scanStage}
                                 </p>
                             </div>
                         ) : (
-                            <p style={{ marginTop: '1rem', color: 'var(--color-primary)', fontWeight: '600' }}>
+                            <p style={{ marginTop: '0.5rem', color: 'var(--color-primary)', fontWeight: '500', fontSize: '0.85rem' }}>
                                 点击更换图片
                             </p>
                         )}
                     </div>
                 ) : (
                     <div>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: isScanning ? 0.5 : 0.4 }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: isScanning ? 0.5 : 0.4 }}>
                             {isScanning ? '⏳' : '📷'}
                         </div>
-                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '1rem' }}>
-                            {isScanning ? '识别中，请稍候...' : '点击上传账单图片'}
+                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                            {isScanning ? '识别中...' : '点击上传账单图片'}
                         </h3>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.6 }}>
                             支持 JPG, PNG 格式
                         </p>
                     </div>
@@ -187,15 +187,16 @@ function StepPhotos({ onNext, setItems }) {
                 />
             </div>
 
+            {/* 错误提示 */}
             {error && (
                 <div style={{
                     background: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: 'var(--radius-md)',
-                    padding: '0.75rem 1rem',
+                    padding: '0.6rem 0.875rem',
                     marginBottom: '1rem',
                     color: 'var(--color-danger)',
-                    fontSize: '0.875rem'
+                    fontSize: '0.85rem'
                 }}>
                     {error}
                 </div>
@@ -203,21 +204,29 @@ function StepPhotos({ onNext, setItems }) {
 
             {/* 识别结果编辑区域 */}
             {showResults && recognizedItems.length > 0 && (
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '1rem'
+                        marginBottom: '0.75rem'
                     }}>
-                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-main)' }}>
                             识别结果
+                            <span style={{
+                                background: 'var(--color-success)',
+                                color: 'white',
+                                fontSize: '0.7rem',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: 'var(--radius-full)',
+                                marginLeft: '0.5rem'
+                            }}>{recognizedItems.length}项</span>
                         </h4>
                         <button
                             onClick={handleAddItem}
                             style={{
-                                padding: '0.25rem 0.75rem',
-                                fontSize: '0.8rem',
+                                padding: '0.2rem 0.6rem',
+                                fontSize: '0.75rem',
                                 background: 'var(--color-primary)',
                                 color: 'white',
                                 border: 'none',
@@ -230,7 +239,7 @@ function StepPhotos({ onNext, setItems }) {
                         </button>
                     </div>
                     <div style={{
-                        background: 'rgba(255,255,255,0.5)',
+                        background: 'rgba(255,255,255,0.6)',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--border-glass)'
                     }}>
@@ -238,9 +247,9 @@ function StepPhotos({ onNext, setItems }) {
                             <div key={index} style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                padding: '0.75rem 1rem',
+                                padding: '0.6rem 0.875rem',
                                 borderBottom: index < recognizedItems.length - 1 ? '1px solid var(--border-glass)' : 'none',
-                                gap: '0.75rem'
+                                gap: '0.5rem'
                             }}>
                                 <input
                                     type="text"
@@ -249,15 +258,15 @@ function StepPhotos({ onNext, setItems }) {
                                     placeholder="菜品名称"
                                     style={{
                                         flex: 2,
-                                        padding: '0.5rem',
+                                        padding: '0.4rem 0.6rem',
                                         border: '1px solid var(--border-glass)',
                                         borderRadius: 'var(--radius-sm)',
-                                        fontSize: '0.9rem',
+                                        fontSize: '0.85rem',
                                         background: 'white'
                                     }}
                                 />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
-                                    <span style={{ color: 'var(--text-muted)' }}>¥</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flex: 1 }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>¥</span>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -266,10 +275,10 @@ function StepPhotos({ onNext, setItems }) {
                                         placeholder="价格"
                                         style={{
                                             width: '100%',
-                                            padding: '0.5rem',
+                                            padding: '0.4rem 0.6rem',
                                             border: '1px solid var(--border-glass)',
                                             borderRadius: 'var(--radius-sm)',
-                                            fontSize: '0.9rem',
+                                            fontSize: '0.85rem',
                                             background: 'white'
                                         }}
                                     />
@@ -281,9 +290,10 @@ function StepPhotos({ onNext, setItems }) {
                                         border: 'none',
                                         color: 'var(--color-danger)',
                                         cursor: 'pointer',
-                                        fontSize: '1.2rem',
-                                        padding: '0.25rem',
-                                        lineHeight: 1
+                                        fontSize: '1.1rem',
+                                        padding: '0.1rem',
+                                        lineHeight: 1,
+                                        opacity: 0.7
                                     }}
                                 >
                                     ×
@@ -291,17 +301,17 @@ function StepPhotos({ onNext, setItems }) {
                             </div>
                         ))}
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
                         可编辑识别结果，确认后将填入下一步
                     </p>
                 </div>
             )}
 
             {/* 底部按钮 */}
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button
                     className="btn-secondary"
-                    onClick={handleSkip}
+                    onClick={onNext}
                     disabled={isScanning}
                     style={{ flex: 1 }}
                 >
@@ -318,7 +328,7 @@ function StepPhotos({ onNext, setItems }) {
                 ) : (
                     <button
                         className="btn-primary"
-                        onClick={handleSkip}
+                        onClick={onNext}
                         disabled={isScanning}
                         style={{ flex: 2, opacity: isScanning ? 0.5 : 1 }}
                     >

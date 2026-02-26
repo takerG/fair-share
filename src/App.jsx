@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './index.css';
 
 // 导入步骤组件
@@ -9,23 +9,67 @@ import StepUnclaimed from './components/steps/StepUnclaimed';
 import StepResult from './components/steps/StepResult';
 
 const STEPS = [
-  { id: 'photos', title: '上传账单', subtitle: '上传账单照片，自动识别菜品和价格' },
-  { id: 'items', title: '添加信息', subtitle: '添加参与人员和消费项目' },
-  { id: 'allocate', title: '分配比例', subtitle: '设置每道菜每个人的食用比例' },
-  { id: 'unclaimed', title: '处理未分配', subtitle: '处理未分配满100%的物品' },
-  { id: 'result', title: '结算结果', subtitle: '查看每个人的应付金额明细' }
+  { id: 'photos', title: '上传账单', subtitle: '上传账单照片，自动识别菜品和价格', icon: '📷' },
+  { id: 'items', title: '添加信息', subtitle: '添加参与人员和消费项目', icon: '👥' },
+  { id: 'allocate', title: '分配比例', subtitle: '设置每道菜每个人的食用比例', icon: '📊' },
+  { id: 'unclaimed', title: '处理未分配', subtitle: '处理未分配满100%的物品', icon: '🔀' },
+  { id: 'result', title: '结算结果', subtitle: '查看每个人的应付金额明细', icon: '💰' }
 ];
 
+// 本地存储键名
+const STORAGE_KEY = 'jikou_data';
+
+// 从本地存储加载数据
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Failed to load from storage:', e);
+  }
+  return null;
+}
+
+// 保存数据到本地存储
+function saveToStorage(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save to storage:', e);
+  }
+}
+
+// 清除本地存储
+function clearStorage() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error('Failed to clear storage:', e);
+  }
+}
+
 function App() {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // 尝试从本地存储恢复数据
+  const savedData = useMemo(() => loadFromStorage(), []);
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(savedData?.currentStepIndex || 0);
 
   // 全局数据状态
-  const [participants, setParticipants] = useState([
-    { id: 'p1', name: '我' },
-    { id: 'p2', name: '朋友A' }
-  ]);
-  const [items, setItems] = useState([]); // {id, name, price}
-  const [allocations, setAllocations] = useState({}); // { itemId: { pId: percent } }
+  const [participants, setParticipants] = useState(savedData?.participants || []);
+  const [items, setItems] = useState(savedData?.items || []);
+  const [allocations, setAllocations] = useState(savedData?.allocations || {});
+
+  // 保存数据到本地存储
+  useEffect(() => {
+    saveToStorage({
+      currentStepIndex,
+      participants,
+      items,
+      allocations
+    });
+  }, [currentStepIndex, participants, items, allocations]);
 
   // 计算是否有未分配物品（只看 claimed，不看 assigned）
   const hasUnclaimedItems = useMemo(() => {
@@ -44,8 +88,19 @@ function App() {
   }, [items, allocations, participants]);
 
   // 记录是否有未分配物品（用于导航判断）
-  // 在用户完成 allocate 步骤时判断，之后保持不变直到重新进入 allocate
   const [hadUnclaimedWhenAllocated, setHadUnclaimedWhenAllocated] = useState(false);
+
+  // 重新开始
+  const handleReset = () => {
+    if (confirm('确定要重新开始吗？当前数据将被清空。')) {
+      setCurrentStepIndex(0);
+      setParticipants([]);
+      setItems([]);
+      setAllocations({});
+      setHadUnclaimedWhenAllocated(false);
+      clearStorage();
+    }
+  };
 
   const handleNext = () => {
     if (currentStepIndex < STEPS.length - 1) {
@@ -80,7 +135,8 @@ function App() {
       items, setItems,
       allocations, setAllocations,
       onNext: handleNext,
-      onPrev: handlePrev
+      onPrev: handlePrev,
+      onReset: handleReset
     };
 
     switch (STEPS[currentStepIndex].id) {
@@ -95,23 +151,21 @@ function App() {
 
   // 计算实际显示的步骤数（可能跳过 unclaimed）
   const getDisplayStepInfo = () => {
-    // 如果在 allocate 步骤，实时判断
     const currentStep = STEPS[currentStepIndex];
     if (currentStep.id === 'allocate') {
       if (!hasUnclaimedItems) {
         const visibleSteps = STEPS.filter(s => s.id !== 'unclaimed');
         const currentIndex = visibleSteps.findIndex(s => s.id === currentStep.id);
-        return { total: visibleSteps.length, current: currentIndex + 1 };
+        return { total: visibleSteps.length, current: currentIndex + 1, steps: visibleSteps };
       }
     } else {
-      // 其他步骤，根据之前记录的状态判断
       if (!hadUnclaimedWhenAllocated) {
         const visibleSteps = STEPS.filter(s => s.id !== 'unclaimed');
         const currentIndex = visibleSteps.findIndex(s => s.id === currentStep.id);
-        return { total: visibleSteps.length, current: currentIndex + 1 };
+        return { total: visibleSteps.length, current: currentIndex + 1, steps: visibleSteps };
       }
     }
-    return { total: STEPS.length, current: currentStepIndex + 1 };
+    return { total: STEPS.length, current: currentStepIndex + 1, steps: STEPS };
   };
 
   const stepInfo = getDisplayStepInfo();
@@ -139,19 +193,69 @@ function App() {
               letterSpacing: '0.02em'
             }}>精准AA</span>
           </div>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Step {stepInfo.current} of {stepInfo.total}
-          </span>
+          {/* 重新开始按钮 */}
+          {(items.length > 0 || participants.length > 0) && (
+            <button
+              onClick={handleReset}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                padding: '0.25rem 0.5rem',
+                borderRadius: 'var(--radius-sm)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.target.style.color = 'var(--color-danger)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'none';
+                e.target.style.color = 'var(--text-muted)';
+              }}
+            >
+              重新开始
+            </button>
+          )}
         </div>
 
-        {/* 进度条动画体验 */}
-        <div style={{ width: '100%', height: '4px', background: 'var(--border-glass)', borderRadius: '2px', marginTop: '0.75rem', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${((stepInfo.current - 1) / Math.max(1, stepInfo.total - 1)) * 100}%`,
-            background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
-            transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-          }} />
+        {/* 步骤指示器 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+          {stepInfo.steps.map((step, index) => {
+            const isCompleted = index < stepInfo.current - 1;
+            const isCurrent = index === stepInfo.current - 1;
+            return (
+              <div key={step.id} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: 'var(--radius-full)',
+                  background: isCurrent ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' :
+                            isCompleted ? 'var(--color-success)' : 'var(--border-glass)',
+                  color: (isCurrent || isCompleted) ? 'white' : 'var(--text-muted)',
+                  fontSize: '0.75rem',
+                  fontWeight: isCurrent ? '600' : '400',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <span>{step.icon}</span>
+                  <span style={{ display: isCurrent ? 'inline' : 'none' }}>{step.title}</span>
+                </div>
+                {index < stepInfo.steps.length - 1 && (
+                  <div style={{
+                    width: '12px',
+                    height: '2px',
+                    background: index < stepInfo.current - 1 ? 'var(--color-success)' : 'var(--border-glass)',
+                    margin: '0 0.25rem',
+                    transition: 'background 0.3s ease'
+                  }} />
+                )}
+              </div>
+            );
+          })}
         </div>
       </header>
 
@@ -165,6 +269,17 @@ function App() {
             {renderCurrentStep()}
           </div>
         </div>
+
+        {/* 底部提示 */}
+        <footer style={{
+          textAlign: 'center',
+          padding: '1rem 0',
+          color: 'var(--text-muted)',
+          fontSize: '0.75rem',
+          opacity: 0.6
+        }}>
+          数据仅保存在本地浏览器
+        </footer>
       </main>
     </div>
   );

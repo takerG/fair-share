@@ -132,7 +132,6 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
                     WebkitBackdropFilter: 'blur(8px)',
                     zIndex: 1000,
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '1.5rem'
@@ -140,40 +139,48 @@ function StepResult({ participants, items, allocations, onPrev, onReset }) {
                     onClick={closePreview}
                 >
                     <div style={{
-                        color: 'white',
-                        textAlign: 'center',
-                        marginBottom: '1.25rem'
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        maxWidth: '100%',
+                        maxHeight: '100%'
                     }}>
-                        <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', marginBottom: '0.35rem' }}>长按图片保存到相册</p>
-                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.85rem' }}>点击任意位置关闭</p>
-                    </div>
-                    <img
-                        src={imageDataUrl}
-                        alt="账单"
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '65vh',
-                            borderRadius: 'var(--radius-lg)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
-                        }}
-                    />
-                    {navigator.share && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                        <img
+                            src={imageDataUrl}
+                            alt="账单"
                             style={{
-                                marginTop: '1.25rem',
-                                padding: '0.75rem 2rem',
-                                background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: 'var(--radius-full)',
-                                fontWeight: 600,
-                                fontSize: '0.9rem'
+                                maxWidth: '100%',
+                                maxHeight: '70vh',
+                                borderRadius: 'var(--radius-lg)',
+                                boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
                             }}
-                        >
-                            分享
-                        </button>
-                    )}
+                        />
+                        <div style={{
+                            color: 'white',
+                            textAlign: 'center',
+                            marginTop: '1.25rem'
+                        }}>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', marginBottom: '0.25rem' }}>长按图片保存到相册</p>
+                            <p style={{ margin: 0, opacity: 0.6, fontSize: '0.85rem' }}>点击任意位置关闭</p>
+                        </div>
+                        {navigator.share && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                style={{
+                                    marginTop: '1rem',
+                                    padding: '0.75rem 2rem',
+                                    background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-full)',
+                                    fontWeight: 600,
+                                    fontSize: '0.9rem'
+                                }}
+                            >
+                                分享
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 

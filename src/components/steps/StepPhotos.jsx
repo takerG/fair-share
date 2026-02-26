@@ -10,12 +10,16 @@ function StepPhotos({ onNext, setItems }) {
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStage, setScanStage] = useState('');
     const [error, setError] = useState(null);
+    const [recognizedItems, setRecognizedItems] = useState([]);
+    const [showResults, setShowResults] = useState(false);
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         setError(null);
+        setRecognizedItems([]);
+        setShowResults(false);
 
         // 显示预览
         const reader = new FileReader();
@@ -26,26 +30,30 @@ function StepPhotos({ onNext, setItems }) {
             // 开始OCR识别
             setIsScanning(true);
             setScanProgress(0);
-            setScanStage('初始化...');
+            setScanStage('加载语言包...');
 
             try {
                 const result = await scanReceipt(dataUrl, ({ stage, progress }) => {
                     setScanProgress(progress);
-                    setScanStage(stage === 'recognizing' ? '识别中...' : '解析中...');
+                    if (stage === 'initializing') {
+                        setScanStage('初始化...');
+                    } else if (stage === 'recognizing') {
+                        setScanStage('识别中...');
+                    } else {
+                        setScanStage('解析中...');
+                    }
                 });
 
                 if (result.items.length > 0) {
-                    // 自动填入消费项目
-                    const newItems = result.items.map((item, idx) => ({
-                        id: 'item_' + Date.now() + '_' + idx,
-                        name: item.name,
-                        price: item.price
-                    }));
-                    setItems(prev => [...prev, ...newItems]);
+                    setRecognizedItems(result.items);
+                    setShowResults(true);
+                    setScanStage(`识别完成，发现 ${result.items.length} 项`);
+                } else {
+                    setError('未识别到有效的菜品信息，请手动录入');
+                    setScanStage('');
                 }
 
                 setIsScanning(false);
-                setScanStage(`识别完成，发现 ${result.items.length} 项`);
             } catch (err) {
                 console.error('OCR error:', err);
                 setIsScanning(false);
@@ -56,7 +64,35 @@ function StepPhotos({ onNext, setItems }) {
         reader.readAsDataURL(file);
     };
 
-    const handleNextWithItems = () => {
+    const handleConfirm = () => {
+        // 将识别结果填入消费项目
+        const newItems = recognizedItems.map((item, idx) => ({
+            id: 'item_' + Date.now() + '_' + idx,
+            name: item.name,
+            price: item.price
+        }));
+        setItems(prev => [...prev, ...newItems]);
+        onNext();
+    };
+
+    const handleRemoveItem = (index) => {
+        setRecognizedItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleUpdateItem = (index, field, value) => {
+        setRecognizedItems(prev => prev.map((item, i) => {
+            if (i === index) {
+                return { ...item, [field]: field === 'price' ? parseFloat(value) || 0 : value };
+            }
+            return item;
+        }));
+    };
+
+    const handleAddItem = () => {
+        setRecognizedItems(prev => [...prev, { name: '', price: 0 }]);
+    };
+
+    const handleSkip = () => {
         onNext();
     };
 
@@ -73,10 +109,11 @@ function StepPhotos({ onNext, setItems }) {
                     上传账单图片，自动识别菜品和价格
                 </p>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                    识别结果将自动填入下一步，可在信息页修改
+                    识别结果可在下一步修改，首次识别需下载语言包
                 </p>
             </div>
 
+            {/* 上传区域 */}
             <div style={{
                 border: '2px dashed var(--border-glass)',
                 borderRadius: 'var(--radius-md)',
@@ -119,7 +156,7 @@ function StepPhotos({ onNext, setItems }) {
                             </div>
                         ) : (
                             <p style={{ marginTop: '1rem', color: 'var(--color-primary)', fontWeight: '600' }}>
-                                {scanStage || '点击更换图片'}
+                                点击更换图片
                             </p>
                         )}
                     </div>
@@ -132,7 +169,7 @@ function StepPhotos({ onNext, setItems }) {
                             {isScanning ? '识别中，请稍候...' : '点击上传账单图片'}
                         </h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>
-                            支持 JPG, PNG 格式，首次识别需下载语言包
+                            支持 JPG, PNG 格式
                         </p>
                     </div>
                 )}
@@ -161,18 +198,130 @@ function StepPhotos({ onNext, setItems }) {
                 </div>
             )}
 
+            {/* 识别结果编辑区域 */}
+            {showResults && recognizedItems.length > 0 && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1rem'
+                    }}>
+                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>
+                            识别结果
+                        </h4>
+                        <button
+                            onClick={handleAddItem}
+                            style={{
+                                padding: '0.25rem 0.75rem',
+                                fontSize: '0.8rem',
+                                background: 'var(--color-primary)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 'var(--radius-full)',
+                                cursor: 'pointer',
+                                fontWeight: 500
+                            }}
+                        >
+                            + 添加
+                        </button>
+                    </div>
+                    <div style={{
+                        background: 'rgba(255,255,255,0.5)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-glass)'
+                    }}>
+                        {recognizedItems.map((item, index) => (
+                            <div key={index} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '0.75rem 1rem',
+                                borderBottom: index < recognizedItems.length - 1 ? '1px solid var(--border-glass)' : 'none',
+                                gap: '0.75rem'
+                            }}>
+                                <input
+                                    type="text"
+                                    value={item.name}
+                                    onChange={(e) => handleUpdateItem(index, 'name', e.target.value)}
+                                    placeholder="菜品名称"
+                                    style={{
+                                        flex: 2,
+                                        padding: '0.5rem',
+                                        border: '1px solid var(--border-glass)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.9rem',
+                                        background: 'white'
+                                    }}
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>¥</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={item.price}
+                                        onChange={(e) => handleUpdateItem(index, 'price', e.target.value)}
+                                        placeholder="价格"
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.5rem',
+                                            border: '1px solid var(--border-glass)',
+                                            borderRadius: 'var(--radius-sm)',
+                                            fontSize: '0.9rem',
+                                            background: 'white'
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleRemoveItem(index)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'var(--color-danger)',
+                                        cursor: 'pointer',
+                                        fontSize: '1.2rem',
+                                        padding: '0.25rem',
+                                        lineHeight: 1
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                        可编辑识别结果，确认后将填入下一步
+                    </p>
+                </div>
+            )}
+
+            {/* 底部按钮 */}
             <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" onClick={onNext} style={{ flex: 1 }} disabled={isScanning}>
+                <button
+                    className="btn-secondary"
+                    onClick={handleSkip}
+                    disabled={isScanning}
+                    style={{ flex: 1 }}
+                >
                     跳过
                 </button>
-                <button
-                    className="btn-primary"
-                    onClick={handleNextWithItems}
-                    disabled={isScanning}
-                    style={{ flex: 2, opacity: isScanning ? 0.5 : 1 }}
-                >
-                    下一步
-                </button>
+                {showResults && recognizedItems.length > 0 ? (
+                    <button
+                        className="btn-primary"
+                        onClick={handleConfirm}
+                        style={{ flex: 2 }}
+                    >
+                        确认并继续
+                    </button>
+                ) : (
+                    <button
+                        className="btn-primary"
+                        onClick={handleSkip}
+                        disabled={isScanning}
+                        style={{ flex: 2, opacity: isScanning ? 0.5 : 1 }}
+                    >
+                        下一步
+                    </button>
+                )}
             </div>
         </div>
     );

@@ -4,7 +4,7 @@ import { scanReceipt } from '../../utils/ocr';
 /**
  * 第一步：账单拍照上传（OCR识别）
  */
-function StepPhotos({ onNext, setItems }) {
+function StepPhotos({ isCreator, onNext, setItems }) {
     const [photoPreview, setPhotoPreview] = useState(null);
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
@@ -111,81 +111,96 @@ function StepPhotos({ onNext, setItems }) {
             </div>
 
             {/* 上传区域 */}
-            <div style={{
-                border: '2px dashed var(--border-glass)',
-                borderRadius: 'var(--radius-lg)',
-                padding: showResults ? '1rem' : '2rem',
-                textAlign: 'center',
-                background: photoPreview ? 'rgba(99, 102, 241, 0.02)' : 'rgba(99, 102, 241, 0.02)',
-                cursor: isScanning ? 'wait' : 'pointer',
-                marginBottom: '1.25rem',
-                position: 'relative',
-                transition: 'all var(--transition-normal)',
-                opacity: isScanning ? 0.8 : 1
-            }}>
-                {photoPreview ? (
-                    <div>
-                        <img
-                            src={photoPreview}
-                            alt="Receipt Preview"
-                            style={{
-                                maxWidth: '100%',
-                                maxHeight: showResults ? '120px' : '180px',
-                                borderRadius: 'var(--radius-sm)',
-                                boxShadow: 'var(--shadow-md)'
-                            }}
-                        />
-                        {isScanning ? (
-                            <div style={{ marginTop: '0.75rem' }}>
-                                <div style={{
-                                    width: '100%',
-                                    maxWidth: '200px',
-                                    height: '6px',
-                                    background: 'var(--border-glass)',
-                                    borderRadius: '3px',
-                                    overflow: 'hidden',
-                                    margin: '0 auto 0.5rem'
-                                }}>
+            {isCreator ? (
+                <div style={{
+                    border: '2px dashed var(--border-glass)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: showResults ? '1rem' : '2rem',
+                    textAlign: 'center',
+                    background: photoPreview ? 'rgba(99, 102, 241, 0.02)' : 'rgba(99, 102, 241, 0.02)',
+                    cursor: isScanning ? 'wait' : 'pointer',
+                    marginBottom: '1.25rem',
+                    position: 'relative',
+                    transition: 'all var(--transition-normal)',
+                    opacity: isScanning ? 0.8 : 1
+                }}>
+                    {photoPreview ? (
+                        <div>
+                            <img
+                                src={photoPreview}
+                                alt="Receipt Preview"
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: showResults ? '120px' : '180px',
+                                    borderRadius: 'var(--radius-sm)',
+                                    boxShadow: 'var(--shadow-md)'
+                                }}
+                            />
+                            {isScanning ? (
+                                <div style={{ marginTop: '0.75rem' }}>
                                     <div style={{
-                                        width: `${scanProgress}%`,
-                                        height: '100%',
-                                        background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
-                                        transition: 'width 0.2s ease'
-                                    }} />
+                                        width: '100%',
+                                        maxWidth: '200px',
+                                        height: '6px',
+                                        background: 'var(--border-glass)',
+                                        borderRadius: '3px',
+                                        overflow: 'hidden',
+                                        margin: '0 auto 0.5rem'
+                                    }}>
+                                        <div style={{
+                                            width: `${scanProgress}%`,
+                                            height: '100%',
+                                            background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
+                                            transition: 'width 0.2s ease'
+                                        }} />
+                                    </div>
+                                    <p style={{ color: 'var(--color-primary)', fontWeight: '500', margin: 0, fontSize: '0.85rem' }}>
+                                        {scanStage}
+                                    </p>
                                 </div>
-                                <p style={{ color: 'var(--color-primary)', fontWeight: '500', margin: 0, fontSize: '0.85rem' }}>
-                                    {scanStage}
+                            ) : (
+                                <p style={{ marginTop: '0.5rem', color: 'var(--color-primary)', fontWeight: '500', fontSize: '0.85rem' }}>
+                                    点击更换图片
                                 </p>
-                            </div>
-                        ) : (
-                            <p style={{ marginTop: '0.5rem', color: 'var(--color-primary)', fontWeight: '500', fontSize: '0.85rem' }}>
-                                点击更换图片
-                            </p>
-                        )}
-                    </div>
-                ) : (
-                    <div>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: isScanning ? 0.5 : 0.4 }}>
-                            {isScanning ? '⏳' : '📷'}
+                            )}
                         </div>
-                        <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
-                            {isScanning ? '识别中...' : '点击上传账单图片'}
-                        </h3>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.6 }}>
-                            支持 JPG, PNG 格式
-                        </p>
-                    </div>
-                )}
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUpload}
-                    disabled={isScanning}
-                    style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: isScanning ? 'wait' : 'pointer'
-                    }}
-                />
-            </div>
+                    ) : (
+                        <div>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: isScanning ? 0.5 : 0.4 }}>
+                                {isScanning ? '⏳' : '📷'}
+                            </div>
+                            <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                                {isScanning ? '识别中...' : '点击上传账单图片'}
+                            </h3>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.6 }}>
+                                支持 JPG, PNG 格式
+                            </p>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUpload}
+                        disabled={isScanning}
+                        style={{
+                            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: isScanning ? 'wait' : 'pointer'
+                        }}
+                    />
+                </div>
+            ) : (
+                <div style={{
+                    border: '2px dashed var(--border-glass)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    background: 'rgba(99, 102, 241, 0.02)',
+                    marginBottom: '1.25rem'
+                }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.5 }}>⏳</div>
+                    <h3 style={{ color: 'var(--text-main)', marginBottom: '0.25rem', fontSize: '1rem' }}>请等待发起人上传账单</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>只有创建者可以在此页面上传和识别账单，您可以跳过进入后续步骤。</p>
+                </div>
+            )}
 
             {/* 错误提示 */}
             {error && (
@@ -202,8 +217,8 @@ function StepPhotos({ onNext, setItems }) {
                 </div>
             )}
 
-            {/* 识别结果编辑区域 */}
-            {showResults && recognizedItems.length > 0 && (
+            {/* 识别结果编辑区域 (仅发起人可见) */}
+            {isCreator && showResults && recognizedItems.length > 0 && (
                 <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{
                         display: 'flex',
@@ -312,12 +327,12 @@ function StepPhotos({ onNext, setItems }) {
                 <button
                     className="btn-secondary"
                     onClick={onNext}
-                    disabled={isScanning}
+                    disabled={isCreator && isScanning}
                     style={{ flex: 1 }}
                 >
                     跳过
                 </button>
-                {showResults && recognizedItems.length > 0 ? (
+                {isCreator && showResults && recognizedItems.length > 0 ? (
                     <button
                         className="btn-primary"
                         onClick={handleConfirm}
@@ -329,10 +344,10 @@ function StepPhotos({ onNext, setItems }) {
                     <button
                         className="btn-primary"
                         onClick={onNext}
-                        disabled={isScanning}
-                        style={{ flex: 2, opacity: isScanning ? 0.5 : 1 }}
+                        disabled={isCreator && isScanning}
+                        style={{ flex: 2, opacity: (isCreator && isScanning) ? 0.5 : 1 }}
                     >
-                        下一步
+                        {isCreator ? '下一步' : '提前进入'}
                     </button>
                 )}
             </div>

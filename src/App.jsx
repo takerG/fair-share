@@ -2,14 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './index.css';
 
 // 版本号 - 每次修改自增
-const VERSION = 'v1.0.13';
+const VERSION = 'v1.1.0-sync';
 
 // 导入步骤组件
+import StepLobby from './components/steps/StepLobby';
 import StepPhotos from './components/steps/StepPhotos';
 import StepItems from './components/steps/StepItems';
 import StepAllocate from './components/steps/StepAllocate';
 import StepUnclaimed from './components/steps/StepUnclaimed';
 import StepResult from './components/steps/StepResult';
+import { useRoomSync } from './utils/store';
 
 const STEPS = [
   { id: 'photos', title: '上传账单', subtitle: '上传账单照片，自动识别菜品和价格', icon: '📷' },
@@ -59,20 +61,23 @@ function App() {
 
   const [currentStepIndex, setCurrentStepIndex] = useState(savedData?.currentStepIndex || 0);
 
-  // 全局数据状态
-  const [participants, setParticipants] = useState(savedData?.participants || []);
-  const [items, setItems] = useState(savedData?.items || []);
-  const [allocations, setAllocations] = useState(savedData?.allocations || {});
+  // 房间和用户状态 (本地持久化)
+  const [roomId, setRoomId] = useState(savedData?.roomId || null);
+  const [localUserName, setLocalUserName] = useState(savedData?.localUserName || '');
+  const [isCreator, setIsCreator] = useState(savedData?.isCreator || false);
 
-  // 保存数据到本地存储
+  // 全局数据状态 (通过 Yjs 同步)
+  const { participants, setParticipants, items, setItems, allocations, setAllocations, isSynced } = useRoomSync(roomId, localUserName, isCreator);
+
+  // 保存基础连接信息到本地存储
   useEffect(() => {
     saveToStorage({
       currentStepIndex,
-      participants,
-      items,
-      allocations
+      roomId,
+      localUserName,
+      isCreator
     });
-  }, [currentStepIndex, participants, items, allocations]);
+  }, [currentStepIndex, roomId, localUserName, isCreator]);
 
   // 计算是否有未分配物品（只看 claimed，不看 assigned）
   const hasUnclaimedItems = useMemo(() => {
@@ -93,13 +98,13 @@ function App() {
   // 记录是否有未分配物品（用于导航判断）
   const [hadUnclaimedWhenAllocated, setHadUnclaimedWhenAllocated] = useState(false);
 
-  // 重新开始
+  // 重新开始（离开房间）
   const handleReset = () => {
-    if (confirm('确定要重新开始吗？当前数据将被清空。')) {
+    if (confirm('确定要离开当前账单并返回大厅吗？')) {
       setCurrentStepIndex(0);
-      setParticipants([]);
-      setItems([]);
-      setAllocations({});
+      setRoomId(null);
+      setLocalUserName('');
+      setIsCreator(false);
       setHadUnclaimedWhenAllocated(false);
       clearStorage();
     }
@@ -133,10 +138,29 @@ function App() {
 
   // 根据当前步骤渲染对应的组件
   const renderCurrentStep = () => {
+    // 如果没有房间号，显示大厅
+    if (!roomId) {
+      return <StepLobby
+        onCreate={(name, room) => {
+          setLocalUserName(name);
+          setRoomId(room);
+          setIsCreator(true);
+          setCurrentStepIndex(0);
+        }}
+        onJoin={(name, room) => {
+          setLocalUserName(name);
+          setRoomId(room);
+          setIsCreator(false);
+          setCurrentStepIndex(0);
+        }}
+      />;
+    }
+
     const stepProps = {
       participants, setParticipants,
       items, setItems,
       allocations, setAllocations,
+      isCreator, // 传递权限标识，用于 StepPhotos 和等
       onNext: handleNext,
       onPrev: handlePrev,
       onReset: handleReset
@@ -238,7 +262,7 @@ function App() {
                   padding: '0.25rem 0.6rem',
                   borderRadius: 'var(--radius-full)',
                   background: isCurrent ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' :
-                            isCompleted ? 'var(--color-success)' : 'var(--border-glass)',
+                    isCompleted ? 'var(--color-success)' : 'var(--border-glass)',
                   color: (isCurrent || isCompleted) ? 'white' : 'var(--text-muted)',
                   fontSize: '0.75rem',
                   fontWeight: isCurrent ? '600' : '400',
@@ -262,11 +286,32 @@ function App() {
         </div>
       </header>
 
+      {/* 当存在 roomId 时，在顶部显示房间号和同步状态 */}
+      {roomId && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.7)', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border-glass)', fontSize: '0.875rem' }}>
+          <div>
+            账单号: <strong style={{ letterSpacing: '2px', color: 'var(--color-primary)' }}>{roomId}</strong>
+            <span style={{ marginLeft: '0.5rem', opacity: 0.6 }}>({localUserName})</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: isSynced ? 'var(--color-success)' : 'var(--color-danger)' }}>
+            <span style={{
+              display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%',
+              background: isSynced ? 'var(--color-success)' : 'var(--color-danger)'
+            }}></span>
+            {isSynced ? '已联机' : '离线'}
+          </div>
+        </div>
+      )}
+
       {/* 主体内容区，带淡入动画区隔每次刷新 */}
-      <main key={currentStep.id} className="fade-in-up">
+      <main key={roomId ? currentStep.id : 'lobby'} className="fade-in-up">
         <div className="glass-container">
-          <h1 className="step-title">{currentStep.title}</h1>
-          <p className="step-subtitle">{currentStep.subtitle}</p>
+          {roomId ? (
+            <>
+              <h1 className="step-title">{currentStep.title}</h1>
+              <p className="step-subtitle">{currentStep.subtitle}</p>
+            </>
+          ) : null}
 
           <div className="step-content">
             {renderCurrentStep()}
